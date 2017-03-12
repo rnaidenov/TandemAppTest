@@ -6,21 +6,20 @@ import MuiThemeProvider from '../node_modules/material-ui/styles/MuiThemeProvide
 import FlatButton from '../node_modules/material-ui/FlatButton';
 import TextField from '../node_modules/material-ui/TextField';
 import NextButton from './NextButton';
+import CustomCarousel from './CustomCarousel';
 import BasicContainer from './BasicContainer';
 import Paper from '../node_modules/material-ui/Paper';
-import Carousel from '../node_modules/nuka-carousel/index.js';
 import Avatar from "../node_modules/material-ui/Avatar";
-import UserInfoActions from './actions/UserInfoActions';
-import UserInfoStore from './stores/UserInfoStore';
-
+import OnboardingActions from './actions/OnboardingActions';
+import OnboardingStore from './stores/OnboardingStore';
+// import PictureUploader from "./PictureUploader";
 
 class DetailsForm extends Reflux.Component {
 
     constructor (props) {
       super(props);
-      injectTapEventPlugin();
-      this.store = UserInfoStore;
-      this.state = {laina:false,stage : 'basicInfo',defaultIcon:'userDefault',selectedCharacterSrc:'',charactersState:'charAvatar',carouselState:'carouselWrap',charactersWrapState:'charactersWrap',goBtnState:'goBtn',showForm:false,newProfileEnabled:false,language:'',showCharacters:false,userInfo:{firstName:null,lastName:null,age:null},disableNextBtn:true};
+      this.store = OnboardingStore;
+      this.state = {defaultIcon:'userDefault',charPromptLabel:'characterPromptLabel',selectedChar:null,selectedCharacterSrc:'',charactersState:'charAvatar',carouselState:'carouselWrap',charactersWrapState:'charactersWrap',sexSelected:'',goBtnState:'goBtn',showForm:false,newProfileEnabled:false,showCharacters:false};
       const x= this;
       function change () {
         x.setState({showCharacters:true});
@@ -28,12 +27,9 @@ class DetailsForm extends Reflux.Component {
       setTimeout(change,700);
     }
 
-    hello = () => {
-      console.log("hi");
-    }
 
     // Click event when selecting a character
-    selectCharacter = (e) => {
+    selectCharacter (e) {
         const character = e.target.name;
         let source = ``;
         if (character.includes('woman')){
@@ -41,6 +37,19 @@ class DetailsForm extends Reflux.Component {
         }
         else if (character.includes('man')) {
           source = `./manBig/${character}.png`;
+        }
+
+        if (this.state.selectedChar === null) {
+          updateChar(this);
+        }
+        else if (this.state.selectedChar.name !== e.target.name) {
+          this.state.selectedChar.className = 'charAvatar';
+          updateChar(this);
+        }
+        function updateChar (self) {
+          self.setState({selectedChar:e.target}, () => {
+            self.state.selectedChar.className = 'charAvatar-selected';
+          });
         }
         this.setState({selectedCharacterSrc:source,goBtnState:'goBtn goBtn-show'});
     }
@@ -50,7 +59,7 @@ class DetailsForm extends Reflux.Component {
     selectCharacterDone = (e) => {
         this.setState({showForm:true});
         if(this.state.goBtnState === 'goBtn goBtn-show') {
-            this.setState({goBtnState:'goBtn goBtn-show contentLeave',charactersState:'charAvatar contentLeave',defaultIcon: 'userDefault contentLeave',carouselState:'contentLeave'});
+            this.setState({goBtnState:'goBtn goBtn-show contentLeave',charPromptLabel:'characterPromptLabel characterPromptLabel-leave',charactersState:'charAvatar contentLeave',defaultIcon: 'userDefault contentLeave',carouselState:'contentLeave'});
             setTimeout(this.setState({charactersWrapState:'charactersWrap-expandWidth'}),1000);
             const x = this;
             function expandHeight () {
@@ -60,56 +69,15 @@ class DetailsForm extends Reflux.Component {
         }
     }
 
-
-    // Events for updating the input values for the user's first and last name, and age
-    getDetails = (e) => {
-      const user = this.state.userInfo;
-      switch (e.target.id) {
-        case 'firstName':
-          user.firstName = e.target.value;
-          this.setState({userInfo:user});
-          break;
-        case 'lastName':
-          user.lastName = e.target.value;
-          this.setState({userInfo:user});
-          break;
-        case 'age':
-          user.age = e.target.value;
-          this.setState({userInfo:user});
-          break;
-        }
-        if(this.isComplete()) {
-          this.setState({disableNextBtn:false});
-        }
-     }
-
-     // Click event for updating the user's sex
-     selectSex = (e) => {
-       const user = this.state.userInfo;
-       user.sex = e.target.name;
-       this.setState({userInfo:user});
-       if(this.isComplete()) {
-         this.setState({disableNextBtn:false});
-       }
-     }
+    selectSex = (e) => {
+      const sex = e.target.name;
+      OnboardingActions.selectSex(sex);
+      this.setState({sexSelected:`selected-${sex}`});
+    }
 
      submitInfo = () => {
        console.log(this.state.userInfo);
      }
-
-     // Check if all user information is provided
-     isComplete = () => {
-       const user = this.state.userInfo;
-       let complete = true;
-       for(const prop in user) {
-         if(user[prop]===null) {
-           complete = false;
-           break;
-         }
-       }
-      return complete;
-     }
-
 
 
     render() {
@@ -143,31 +111,51 @@ class DetailsForm extends Reflux.Component {
         )
       });
 
+      // Avatar for both male and female characters
+      const userProfileCharacters = [userManWrap,userWomanWrap];
+
+      const firstNameError = (
+        <span className='firstNameError'>
+          <span className = 'nameLineError'/>
+          <p className = 'nameErrorText'>Please enter a valid first name</p>
+        </span>
+      )
+
+      const lastNameError = (
+        <span className='lastNameError'>
+          <span className = 'nameLineError'/>
+          <p className = 'nameErrorText'>Please enter a valid last name</p>
+        </span>
+      )
+
       // Form for providing the information about the user
       const form = (
         <div>
           <div className="nameInputWrap">
+            {this.state.firstNameError && firstNameError}
             <TextField
               id='firstName'
               floatingLabelText="First name"
               className="firstNameInput"
-              onBlur = {this.getDetails}
+              onBlur = {(e) => OnboardingActions.getDetails(e)}
             />
+            {this.state.lastNameError && lastNameError}
             <TextField
               id='lastName'
               floatingLabelText="Last name"
               className="lastNameInput"
-              onBlur = {this.getDetails}
+              onBlur = {(e) => OnboardingActions.getDetails(e)}
             />
             <span className="line"/>
           </div>
+          <span className={this.state.sexSelected}></span>
           <div className="sexWrap">
             <span className="sexIconLabelWrap">
-              <img src="./male.png" name = 'male' className="sexIcon" onClick = {this.selectSex}/ >
+              <img src="./male.png" name = 'male' className="sexIcon" onClick = {(e) => this.selectSex(e)}/ >
               <p className = "sexLabel" >Male</p>
             </span>
             <span>
-              <img src="./female.png" name = 'female' className="sexIcon" onClick = {this.selectSex}/>
+              <img src="./female.png" name = 'female' className="sexIcon" onClick = {(e) => this.selectSex(e)}/>
               <p className = "sexLabel" >Female</p>
             </span>
           </div>
@@ -176,40 +164,20 @@ class DetailsForm extends Reflux.Component {
               id='age'
               floatingLabelText="Age"
               className="ageInput"
-              onBlur = {this.getDetails}
+              onBlur = {(e) => OnboardingActions.getDetails(e)}
             />
           </div>
         </div>
       );
 
-      // Left and right arrows for the carousel element
-      const decorators = [{
-          component: React.createClass({
-            render() {
-              return (
-                <i className="material-icons prevArrow" onClick={this.props.previousSlide}>keyboard_arrow_left</i>
-              )
-            }
-          }),
-          position: 'TopLeft'
-        },
-        {
-          component: React.createClass({
-            render() {
-              return (
-                <i className="material-icons nextArrow" onClick={this.props.nextSlide}>keyboard_arrow_right</i>
-              )
-            }
-          }),
-          position: 'TopRight'
-        }
-      ];
 
 
       // Container for the list of characters that the user can choose for his/her profile picture
       const charactersWrap = (
         <div>
-
+        <div className = {this.state.charPromptLabel}>
+          <p>Please select a character or upload your photo</p>
+        </div>
         <MuiThemeProvider
           style={{paddingTop:'5px'}}>
           <FlatButton
@@ -225,19 +193,11 @@ class DetailsForm extends Reflux.Component {
              <Paper
                className = {this.state.charactersWrapState}
              >
-               <Carousel
-                decorators={decorators}
-                slideWidth={1}
-                className={this.state.carouselState}
-               >
-                 <div>
-                    {userManWrap}
-                 </div>
-                 <div>
-                    {userWomanWrap}
-                 </div>
-
-               </Carousel>
+               <CustomCarousel
+                 slideWidth={1}
+                 className={this.state.carouselState}
+                 content={userProfileCharacters}
+               />
              </Paper>
           </MuiThemeProvider>
 
@@ -274,11 +234,7 @@ class DetailsForm extends Reflux.Component {
                 {this.state.newProfileEnabled && newProfile}
                 {this.state.showCharacters && charactersWrap}
 
-                <FlatButton
-                  label = "Go"
-                  onClick = {() => UserInfoActions.sayHi()}
-                >
-                </FlatButton>
+
             </div>
 
           )

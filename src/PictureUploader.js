@@ -2,10 +2,10 @@ import React, {Component} from 'react';
 import ReactDom from 'react-dom';
 import AvatarCropper from '../node_modules/react-avatar-cropper/lib';
 import MuiThemeProvider from '../node_modules/material-ui/styles/MuiThemeProvider';
-import Avatar from '../node_modules/material-ui/Avatar'
+import Avatar from '../node_modules/material-ui/Avatar';
 
 
-class PictureUploder extends Component{
+class PictureUploader extends Component{
 
 
   constructor (props) {
@@ -73,4 +73,4 @@ class PictureUploder extends Component{
 
 };
 
-export default PictureUploder;
+export default PictureUploader;

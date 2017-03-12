@@ -3,7 +3,7 @@ import FlatButton from '../node_modules/material-ui/FlatButton';
 import MuiThemeProvider from '../node_modules/material-ui/styles/MuiThemeProvider';
 
 
-class BackButton extends Component {
+class FinishButton extends Component {
 
     constructor(props) {
         super(props);
@@ -17,9 +17,9 @@ class BackButton extends Component {
 
         return (
           <MuiThemeProvider>
-            <FlatButton backgroundColor = '#595d63'
-            hoverColor = '#727984'
-            label = 'Back'
+            <FlatButton backgroundColor = '#325184'
+            hoverColor = '#4d74b5'
+            label = 'Finish'
             labelStyle = {
                 btnLabel
             }
@@ -35,4 +35,4 @@ class BackButton extends Component {
 
 }
 
-export default BackButton;
+export default FinishButton;

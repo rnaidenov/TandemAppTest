@@ -1,4 +1,5 @@
-import React, {Component} from 'react';
+import React from 'react';
+import Reflux from 'reflux';
 import './LanguagesForm.css';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import MuiThemeProvider from '../node_modules/material-ui/styles/MuiThemeProvider';
@@ -8,20 +9,26 @@ import AutoComplete from '../node_modules/material-ui/AutoComplete';
 import Paper from '../node_modules/material-ui/Paper';
 import DropDownMenu from '../node_modules/material-ui/DropDownMenu';
 import MenuItem from '../node_modules/material-ui/MenuItem';
+import LanguageLevel from './LanguageLevel';
+import OnboardingActions from './actions/OnboardingActions';
+import OnboardingStore from './stores/OnboardingStore';
 
-
-class LanguagesForm extends Component {
+class LanguagesForm extends Reflux.Component {
 
   constructor (props) {
     super(props);
-    injectTapEventPlugin();
-    this.state = {greetUser:true,askLanguages:false,inputContainer:"inputContainer",bubbleState:'speechBubbleGreeting',bubbleSrc:'./speechBubbleGreeting.png',inputFieldState:'inputCountryField',okBtn:"okBtn",langLevel:0,languagesList:[],showInstruction:false,enableInputField:false};
+    this.store = OnboardingStore;
+    // injectTapEventPlugin();
+    this.state = {greetUser:true,askLanguages:false,inputContainer:"inputContainer",bubbleState:'speechBubbleGreeting',bubbleSrc:'./speechBubbleGreeting.png',inputFieldState:'inputCountryField',okBtn:"okBtn",languageAddedLabel:'languageAddedLabel',langErrorWrap:'languagesErrorWrap-appear',showInstruction:false,enableInputField:false};
   }
 
 
-  // Event listener to show button if input is provided
+  // Event listener to show button if mother language is provided
   showOkBtn = (e) => {
-    if(!this.state.askLanguages) {
+
+    OnboardingActions.updateLanguage(e);
+    // If input is more than 5 characters long, show the button
+    if(!this.state.askLanguages && e.target.value.length > 5) {
       this.setState({okBtn:'okBtn okBtn-show'});
     }
   };
@@ -30,6 +37,7 @@ class LanguagesForm extends Component {
   // add the languages he/she is familiar with
   askLanguages = () => {
 
+    OnboardingActions.addLanguage();
     const x = this;
     function changeState () {
       x.setState({inputContainer:'inputContainer inputContainer-expanded',bubbleSrc:'./speechBubbleLanguages.png',bubbleState:'speechBubbleLanguages',askLanguages:true,okBtn:'okBtn',enableInputField:true});
@@ -40,39 +48,72 @@ class LanguagesForm extends Component {
     });
   }
 
-  // Handle change in language level
-  changeLangLevel = (event, index, value) => this.setState({langLevel:value});
-
-  // Handle change in input text field
-  updateLanguage = (e) => {
-    this.setState({currLang:e.target.value});
+  updateFamLangInput = (e) => {
+    this.setState({famLangInput:e.target.value});
   }
 
   // Add a language the user is familiar with the list
   addLanguage = () => {
-      const stateLangList = this.state.languagesList;
+      const userInfoState = this.state.userInfo;
+      const stateLangList = userInfoState.familiarLanguages;
       const newLang = this.state.currLang;
+      const x = this;
 
 
-      if(!stateLangList.includes(newLang) && newLang!=null) {
-        if(stateLangList.length===0) {
-          this.setState({askLanguages:false,showInstruction:true});
-        }
-        stateLangList.push(newLang);
-        this.setState({languagesList:stateLangList});
+
+      // Check if language is already in list of familiar languages
+      function isLanguageAdded (newLang) {
+        var toReturn = false;
+        stateLangList.forEach((lang) => {
+          if (lang.name === newLang) {
+            toReturn = true;
+          }
+        });
+        return toReturn;
       }
 
-      const x = this;
-      console.log(stateLangList);
-      if(stateLangList.length===1 &&  !this.state.showInstruction) {
+      if (newLang == null || newLang == '') {
+        this.setState({validLangError:true});
+        setTimeout(() => {x.setState({langErrorWrap:'languagesErrorWrap-leave'})},3000);
+        setTimeout(() => {x.setState({langErrorWrap:'languagesErrorWrap-appear',validLangError:false})},3400);
 
-        function changeState () {
-          x.setState({bubbleSrc:'./speechBubbleGreeting.png',bubbleState:'speechBubbleInstruction'});
+      }
+      else if (this.state.langLevel==='Level' || this.state.langLevel == null) {
+        this.setState({langLevelError:true});
+        setTimeout(() => {x.setState({langErrorWrap:'languagesErrorWrap-leave'})},3000);
+        setTimeout(() => {x.setState({langErrorWrap:'languagesErrorWrap-appear',langLevelError:false})},3400);
+
+        console.log("Please add level of competency.");
+      }
+      else if (isLanguageAdded(newLang)) {
+        this.setState({addedLangError:true});
+        setTimeout(() => {x.setState({langErrorWrap:'languagesErrorWrap-leave'})},3000);
+        setTimeout(() => {x.setState({langErrorWrap:'languagesErrorWrap-appear',addedLangError:false})},3400);
+
+        console.log(isLanguageAdded(newLang));
+        console.log("Language already added to list. " + newLang)
+      }
+      else {
+        OnboardingActions.addLanguage();
+        this.setState({currLang:'',famLangInput:'',langLevel:'Level',languageAddedLabel:'languageAddedLabel languageAddedLabel-finished'});
+        setTimeout(() => {x.setState({languageAddedLabel:'languageAddedLabel'})},2000);
+
+
+        if(stateLangList.length===1) {
+          this.setState({askLanguages:false,showInstruction:true});
         }
 
-        this.setState({bubbleState:'speechBubbleLanguages bubbleLeave'},() => {
-            setTimeout(changeState,1000);
-        });
+        console.log(stateLangList);
+        if(stateLangList.length===1 &&  !this.state.showInstruction) {
+
+          function changeState () {
+            x.setState({bubbleSrc:'./speechBubbleGreeting.png',bubbleState:'speechBubbleInstruction'});
+          }
+
+          this.setState({bubbleState:'speechBubbleLanguages bubbleLeave'},() => {
+              setTimeout(changeState,1000);
+          });
+        }
       }
 
     }
@@ -104,7 +145,7 @@ class LanguagesForm extends Component {
         className = {this.state.inputFieldState}
         inputStyle={{fontSize:'35px',fontFamily: "'Questrial', sans-serif"}}
         underlineShow = {false}
-        onBlur = {this.showOkBtn}
+        onChange = {this.showOkBtn}
       />
     )
 
@@ -113,25 +154,21 @@ class LanguagesForm extends Component {
     const familiarLanguages = (
       <div className="familiarLanguagesWrap">
         <TextField
+          value = {this.state.famLangInput}
           hintText="Language"
           className="inputFamLangField"
-          onBlur = {this.updateLanguage}
+          onChange = {this.updateFamLangInput}
+          onBlur = {(e) => OnboardingActions.updateLanguage(e)}
         />
 
-
+        <span>
+          <p className={this.state.languageAddedLabel}>Language added </p>
+        </span>
         <span >
-          <DropDownMenu
-          className = "levelSelector"
-          value = {this.state.langLevel}
-          onChange={this.changeLangLevel}>
-            <MenuItem value = {0} primaryText="Level" />
-            <MenuItem value = {1} primaryText="C2" />
-            <MenuItem value = {2} primaryText="C1" />
-            <MenuItem value = {3} primaryText="B2" />
-            <MenuItem value = {4} primaryText="B1" />
-            <MenuItem value = {5} primaryText="A2" />
-            <MenuItem value = {6} primaryText="A1" />
-          </DropDownMenu>
+          <LanguageLevel
+           value = {this.state.langLevel}
+           className = 'levelSelector'
+           onChange ={OnboardingActions.changeLangLevel}/>
         </span>
 
         <FlatButton
@@ -154,18 +191,42 @@ class LanguagesForm extends Component {
     )
 
 
+    const langLevelError = (
+      <div className = {this.state.langErrorWrap}>
+        <img src='errorMsgBubble-rotated.png' className = 'errorBubbleLanguages' id = 'langLevelErrorIcon'/>
+        <p className = 'errorTextLanguages' id='langLevelErrorText'>Please specify level of competency</p>
+      </div>
+    )
+
+    const addedLangError = (
+      <div className = {this.state.langErrorWrap}>
+        <img src='errorMsgBubble-rotated.png' className = 'errorBubbleLanguages' id = 'addedLangErrorIcon'/>
+        <p className = 'errorTextLanguages' id='addedLangErrorText'>{this.state.currLang} is already added</p>
+      </div>
+    )
+
+    const validLangError = (
+      <div className = {this.state.langErrorWrap}>
+        <img src='errorMsgBubble-rotated.png' className = 'errorBubbleLanguages' id = 'addedLangErrorIcon'/>
+        <p className = 'errorTextLanguages' id='validLangErrorText'>Please enter a valid language</p>
+      </div>
+    )
+
+
     // Message which instructs user to add more languages or
     // continue with the onboarding process
     const instruction = (
       <div className = "labelWrap">
-          <p id = "instruction"><span id="languageLabel">{this.state.languagesList[0]}!</span> <br/>That&#39;s great. <br/>
+          <p id = "instruction"><span id="languageLabel">{(this.state.userInfo.familiarLanguages[0] || {}).name}!</span> <br/>That&#39;s great. <br/>
           Add more languages <br/> or click <span id = "nextLabel">Next</span> to continue. </p>
       </div>
     )
 
 
+
+
     return (
-      <div>
+      <div className="transitionComponent">
         <div style = {label}>Let&#39;s connect!</div>
         <div>
         <i className="material-icons smileyIcon"
@@ -195,6 +256,13 @@ class LanguagesForm extends Component {
             <Paper className = {this.state.inputContainer}>
               {this.state.greetUser && motherLanguage}
               {this.state.enableInputField && familiarLanguages}
+              <span>
+                {this.state.langLevelError && langLevelError}
+
+                {this.state.addedLangError && addedLangError}
+
+                {this.state.validLangError && validLangError}
+              </span>
             </Paper>
 
 
