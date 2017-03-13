@@ -11,7 +11,7 @@ import injectTapEventPlugin from 'react-tap-event-plugin';
 injectTapEventPlugin();
 
 ReactDOM.render(
-	  <Onboarding/>
+	  <User/>
   ,
   document.getElementById('root')
 );

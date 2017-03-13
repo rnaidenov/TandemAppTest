@@ -12,6 +12,7 @@
     "react-bootstrap": "^0.30.7",
     "react-dom": "^15.4.2",
     "react-fontawesome": "^1.5.0",
+    "react-infinite": "^0.10.0",
     "reflux": "^6.2.0"
   },
   "scripts": {

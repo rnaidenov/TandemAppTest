@@ -46,6 +46,7 @@ class CustomCarousel extends React.Component {
 
 
       <Carousel
+
        decorators={this.props.decorators || decorators}
        slideIndex = {this.props.slideIndex}
        slidesToShow = {this.props.slidesToShow}
