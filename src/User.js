@@ -168,6 +168,7 @@ class User extends Reflux.Component {
       )
     });
 
+
     const languageLevels = () => {
 
       for (var lang of this.state.userInfo.familiarLanguages) {
