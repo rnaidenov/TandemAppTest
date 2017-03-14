@@ -390,10 +390,11 @@
   width: 450px;
 }
 
-.inputCountryField {
+.inputMotherLangField {
   max-width: 150px;
   max-height: 100px;
   margin-top: 25px;
+  margin-left: -50px !important;
 }
 
 .inputFieldExit {

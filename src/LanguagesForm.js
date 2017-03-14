@@ -21,7 +21,7 @@ class LanguagesForm extends Reflux.Component {
       inputContainer: 'inputContainer',
       bubbleState: 'speechBubbleGreeting',
       bubbleSrc: './speechBubbleGreeting.png',
-      inputFieldState: 'inputCountryField',
+      inputFieldState: 'inputMotherLangField',
       okBtn: 'okBtn',
       languageAddedLabel: 'languageAddedLabel',
       langErrorWrap: 'languagesErrorWrap-appear',
@@ -32,10 +32,10 @@ class LanguagesForm extends Reflux.Component {
 
 
   // Event listener to show button if mother language is provided
-  showOkBtn(e) {
-    OnboardingActions.updateLanguage(e);
+  showOkBtn(input) {
+    OnboardingActions.updateLanguage(input);
     // If input is more than 5 characters long, show the button
-    if (!this.state.askLanguages && e.target.value.length > 5) {
+    if (!this.state.askLanguages && input.length > 5) {
       this.setState({ okBtn: 'okBtn okBtn-show' });
     }
   }
@@ -58,7 +58,7 @@ class LanguagesForm extends Reflux.Component {
 
     this.setState({
       bubbleState: 'speechBubbleGreeting bubbleLeave',
-      inputFieldState: 'inputCountryField inputFieldExit',
+      inputFieldState: 'inputMotherLangField inputFieldExit',
       greetUser: false,
     }, () => {
       setTimeout(changeState, 1000);
@@ -140,13 +140,14 @@ class LanguagesForm extends Reflux.Component {
     // Input text field that prompts
     // user to enter his/her mother language
     const motherLanguage = (
-      <TextField
+      <AutoComplete
+        dataSource = {this.state.allLanguages}
         hintText="E.g Italian"
         hintStyle={{ marginLeft: '20px', fontSize: '20px' }}
         className={this.state.inputFieldState}
         inputStyle={{ fontSize: '35px', fontFamily: "'Questrial', sans-serif" }}
         underlineShow={false}
-        onChange={(e) => this.showOkBtn(e)}
+        onUpdateInput={(e) => this.showOkBtn(e)}
       />
     );
 
